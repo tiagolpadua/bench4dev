@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "nodemon index.js",
+    "start": "node index.js",
+    "nodemon": "nodemon index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -13,10 +14,13 @@
   "dependencies": {
     "boxen": "5.1.2",
     "chalk": "4.1.2",
+    "cli-spinners": "^2.6.1",
+    "log-update": "^4.0.0",
     "pad": "^3.2.0",
     "systeminformation": "5.9.17"
   },
   "devDependencies": {
+    "eslint": "^8.4.1",
     "nodemon": "2.0.15"
   }
 }

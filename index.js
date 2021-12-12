@@ -2,22 +2,37 @@ const si = require('systeminformation');
 const chalk = require('chalk');
 const boxen = require('boxen');
 const pad = require('pad')
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
+const { spawn } = require("child_process");
+const cliSpinners = require('cli-spinners');
+const logUpdate = require('log-update');
+
 const pjson = require('./package.json');
 
-const data = [];
+async function printSystemInfo() {
+    const bi = [];
+    bi.push({ label: 'node', info: process.version });
+    bi.push({ label: 'Platform', info: process.platform });
 
-data.push({ label: pjson.name, info: pjson.version });
-data.push({ label: 'node', info: process.version });
-data.push({ label: 'Platform', info: process.platform });
+    const mem = await si.mem();
+    bi.push({ label: 'Memory', info: Math.ceil(mem.total / 1024 / 1024 / 1024) + ' Gb' });
 
-printBox(data, "Basic Info");
-// console.log(process)
+    await printBox(bi, "System Information");
+}
 
-si.mem().then(data => console.log(data.total / 1024 / 1024 / 1024)).catch(error => console.error(error));
+async function processorInfo() {
+    const pi = [];
 
-// si.cpu() .then(data => console.log(data)) .catch(error => console.error(error));
+    const cpu = await si.cpu();
+    pi.push({ label: 'Name', info: cpu.manufacturer + ' ' + cpu.brand });
+    pi.push({ label: 'Details', info: cpu.processors + ' Processors, ' + cpu.physicalCores + ' Physical Cores, ' + cpu.cores + ' Cores' });
+    pi.push({ label: 'Base Frequency', info: cpu.speed + ' GHz' });
+    await printBox(pi, "Processor Information");
+}
 
-function printBox(dt, title) {
+async function printBox(dt, title) {
     let largestLabelSize = 0;
     dt.forEach(el => {
         if (el.label.length > largestLabelSize) {
@@ -26,9 +41,135 @@ function printBox(dt, title) {
     });
 
     const str = dt.reduce((prev, el) => prev + (prev && '\n') + info(pad(el.label, largestLabelSize), el.info), "");
-    console.log(boxen(str, { title, padding: 1, margin: 1 },));
+    console.log(boxen(str, { title, padding: 1 },));
+    await psleep(100);
 }
 
 function info(label, info) {
     return label + ": " + chalk.green(info);
 }
+
+async function runCommand(cmdStr) {
+    const spinner = cliSpinners.dots;
+    let spinnerMsg = cmdStr;
+    let i = 0;
+
+    const inter = setInterval(() => {
+        const { frames } = spinner;
+        logUpdate(frames[i = ++i % frames.length] + ' ' + spinnerMsg.replace(/(\r\n|\n|\r)/gm, "").trim());
+    }, spinner.interval);
+
+    return new Promise((resolve, reject) => {
+        const cmdList = cmdStr.split(' ');
+
+        const command = cmdList[0];
+        const args = cmdList.slice(1);
+
+        const cmd = spawn(command, args);
+
+        cmd.stdout.on("data", data => {
+            const newMsg = data && (data + '').trim();
+            spinnerMsg = newMsg || spinnerMsg;
+            // console.log(`stdout: ${data}`);
+        });
+
+        cmd.stderr.on("data", data => {
+            console.log(`stderr: ${data}`);
+        });
+
+        cmd.on('error', (error) => {
+            console.log(`error: ${error.message}`);
+        });
+
+        cmd.on("close", code => {
+            clearInterval(inter);
+            if (code == 0) {
+                resolve();
+            } else {
+                reject(code);
+            }
+        });
+    });
+}
+
+async function createBuildReactApp(appName, numberOfBuilds) {
+    await runCommand('npx -y create-react-app@3 ' + appName);
+    process.chdir(appName);
+    for (let i = 0; i < numberOfBuilds; i++) {
+        await runCommand('npm run build');
+    }
+}
+
+async function bench() {
+    await psleep(100);
+    let tmpDir;
+    const appPrefix = pjson.name;
+    try {
+        tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), appPrefix));
+        process.chdir(tmpDir);
+
+        console.log();
+        console.log('Warming up...');
+        await createBuildReactApp('foo', 0);
+        logUpdate.clear()
+        logUpdate.done();
+
+        console.log();
+        console.log('Running benchmark...');
+        const timeBegin = Date.now();
+
+        for (let i = 0; i < 3; i++) {
+            await createBuildReactApp('bar' + i, 10);
+        }
+
+        logUpdate.clear()
+        logUpdate.done();
+
+        const timeEnd = Date.now();
+
+        const secsTimeSpent = (timeEnd - timeBegin) / 1000;
+
+        const minutes = Math.floor(secsTimeSpent / 60);
+        const seconds = secsTimeSpent - minutes * 60;
+
+        const results = [];
+        results.push({ label: 'Total time', info: Math.floor(secsTimeSpent) + 's' });
+        results.push({ label: 'Details', info: minutes + 'm:' + Math.floor(seconds) + 's' });
+        console.log();
+        await printBox(results, "Results");
+    }
+    catch {
+        // handle error
+    }
+    finally {
+        try {
+            if (tmpDir) {
+                fs.rmSync(tmpDir, { recursive: true });
+            }
+        }
+        catch (e) {
+            console.error(`An error has occurred while removing the temp folder at ${tmpDir}. Please remove it manually.Error: ${e} `);
+        }
+    }
+}
+
+function sleep(ms) {
+    return new Promise((resolve) => {
+        setTimeout(resolve, ms);
+    });
+}
+
+async function psleep(ms) {
+    await sleep(ms);
+}
+
+
+console.log();
+console.log(info(pjson.name, pjson.version));
+console.log();
+
+printSystemInfo();
+
+processorInfo();
+
+bench();
