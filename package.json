@@ -4,7 +4,7 @@
   "description": "Simple JS Environment Benchmark",
   "main": "./bin/index.js",
   "scripts": {
-    "start": "FAST_RUN=true node bin/index.js",
+    "start": "cross-env FAST_RUN=true node bin/index.js",
     "default": "node bin/index.js",
     "nodemon": "nodemon bin/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -36,6 +36,7 @@
     "systeminformation": "5.9.17"
   },
   "devDependencies": {
+    "cross-env": "^7.0.3",
     "eslint": "^8.4.1",
     "nodemon": "2.0.15"
   }
