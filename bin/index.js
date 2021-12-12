@@ -178,7 +178,7 @@ async function bench() {
     }
     finally {
         try {
-            process.chdir(tmpDir);
+            process.chdir(path.join('..', tmpDir));
 
             if (tmpDir) {
                 print();
