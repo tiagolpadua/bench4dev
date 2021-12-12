@@ -18,14 +18,13 @@ const spinner = cliSpinners.dots;
 async function printSystemInfo() {
     const bi = [];
     bi.push({ label: 'node', info: process.version });
+    bi.push({ label: 'Platform', info: process.platform });
 
     const mem = await si.mem();
     bi.push({ label: 'Memory', info: Math.ceil(mem.total / 1024 / 1024 / 1024) + ' Gb' });
 
     const osInfo = await si.osInfo();
-    // print(JSON.stringify(osInfo));
-    bi.push({ label: 'OS', info: osInfo.distro + ' ' + osInfo.release });
-    bi.push({ label: 'Kernel', info: osInfo.kernel });
+    print(JSON.stringify(osInfo));
 
     await printBox(bi, "System Information");
 }

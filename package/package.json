@@ -1,6 +1,6 @@
 {
   "name": "bench4dev",
-  "version": "0.0.4",
+  "version": "0.0.3",
   "description": "Simple JS Environment Benchmark",
   "main": "./bin/index.js",
   "scripts": {
