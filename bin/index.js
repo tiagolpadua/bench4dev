@@ -192,8 +192,18 @@ async function bench() {
                     await rmDir(tmpDir);
                     success = true;
                 } catch (err) {
-                    print('Error cleaning temporary directory.');
-                    print(JSON.stringify(err));
+                    try {
+                        await rmDir(tmpDir);
+                        success = true;
+                    } catch (err) {
+                        try {
+                            await rmDir(tmpDir);
+                            success = true;
+                        } catch (err) {
+                            print('Error cleaning temporary directory.');
+                            print(JSON.stringify(err));
+                        }
+                    }
                 }
 
                 logUpdate.clear();
