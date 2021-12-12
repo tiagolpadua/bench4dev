@@ -107,11 +107,14 @@ async function extractBuildReactApp(destDir, numberOfBuilds) {
     } catch (err) {
         print(err);
     }
-    // await runCommand('npx -y create-react-app@3 ' + appName);
     process.chdir(path.join(destDir, 'foo-bar'));
-    await runCommand('npm install');
-    for (let i = 0; i < numberOfBuilds; i++) {
-        await runCommand('npm run build');
+    try {
+        await runCommand('npm install');
+        for (let i = 0; i < numberOfBuilds; i++) {
+            await runCommand('npm run build');
+        }
+    } catch (err) {
+        print(err);
     }
 }
 
