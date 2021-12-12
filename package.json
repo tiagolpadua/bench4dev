@@ -1,16 +1,29 @@
 {
   "name": "bench4dev",
-  "version": "0.0.1-rc.0",
-  "description": "",
+  "version": "0.0.1",
+  "description": "Simple JS Environment Benchmark",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
     "nodemon": "nodemon index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "engines": {
+    "node": ">=10"
+  },
+  "bin": {
+    "bench4dev": "./index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tiagolpadua/bench4dev.git"
+  },
+  "author": "Tiago Lage Payne de Pádua",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/tiagolpadua/bench4dev/issues"
+  },
+  "homepage": "https://github.com/tiagolpadua/bench4dev#readme",
   "dependencies": {
     "boxen": "5.1.2",
     "chalk": "4.1.2",
