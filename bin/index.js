@@ -101,7 +101,7 @@ async function runCommand(cmdStr) {
 
 async function extractBuildReactApp(destDir, numberOfBuilds) {
     try {
-        await decompress(path.join(__dirname, 'assets', 'foo-bar.tar.gz'), destDir);
+        await decompress(path.join(__dirname, '..', 'assets', 'foo-bar.tar.gz'), destDir);
     } catch (err) {
         print(JSON.stringify(err));
         throw new Error(err);
