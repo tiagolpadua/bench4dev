@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 const si = require('systeminformation');
 const chalk = require('chalk');
 const boxen = require('boxen');
