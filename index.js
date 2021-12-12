@@ -85,9 +85,9 @@ async function runCommand(cmdStr) {
         });
 
         cmd.on('error', (error) => {
-            // print(`error: ${error.message}`);
-            const newMsg = error && (error + '').trim();
-            spinnerMsg = newMsg || spinnerMsg;
+            print(`error: ${error.message}`);
+            print(JSON.stringify(error));
+            throw new Error(error);
         });
 
         cmd.on("close", code => {
