@@ -125,12 +125,10 @@ async function extractBuildReactApp(destDir, numberOfBuilds) {
 }
 
 async function bench() {
-    let tmpDir;
     const appPrefix = pjson.name;
-    try {
-        tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), appPrefix));
-        process.chdir(tmpDir);
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), appPrefix));
 
+    try {
         if (process.env.FAST_RUN) {
             print('>>>> FAST RUN ENABLED <<<<');
         }
@@ -140,7 +138,7 @@ async function bench() {
         } else {
             print();
             print('Warming up...');
-            await extractBuildReactApp('warm', 0);
+            await extractBuildReactApp(path.join(tmpDir, 'warm'), 0);
             logUpdate.clear()
             logUpdate.done();
         }
@@ -151,10 +149,10 @@ async function bench() {
         const timeBegin = Date.now();
 
         if (process.env.FAST_RUN) {
-            await extractBuildReactApp('bench', 1);
+            await extractBuildReactApp(path.join(tmpDir, 'bench'), 1);
         } else {
             for (let i = 0; i < 3; i++) {
-                await extractBuildReactApp('bench' + i, 10);
+                await extractBuildReactApp(path.join(tmpDir, 'bench' + i), 10);
             }
         }
 
