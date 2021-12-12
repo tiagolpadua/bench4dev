@@ -11,6 +11,7 @@ const logUpdate = require('log-update');
 const decompress = require('decompress');
 
 const pjson = require('./package.json');
+const spinner = cliSpinners.dots;
 
 async function printSystemInfo() {
     const bi = [];
@@ -55,7 +56,6 @@ function info(label, info) {
 }
 
 async function runCommand(cmdStr) {
-    const spinner = cliSpinners.dots;
     let spinnerMsg = cmdStr;
     let i = 0;
 
@@ -105,17 +105,18 @@ async function extractBuildReactApp(destDir, numberOfBuilds) {
     try {
         await decompress(path.join(__dirname, 'assets', 'foo-bar.tar.gz'), destDir);
     } catch (err) {
-        print(err);
+        print(JSON.stringify(err));
+        throw new Error(err);
     }
     process.chdir(path.join(destDir, 'foo-bar'));
     // print(console.log(process.cwd()));
     try {
-        await runCommand('npm install');
+        await runCommand('npm ci');
         for (let i = 0; i < numberOfBuilds; i++) {
             await runCommand('npm run build');
         }
     } catch (err) {
-        print(err);
+        print(JSON.stringify(err));
     }
 }
 
@@ -136,8 +137,14 @@ async function bench() {
         print('Running benchmark...');
         const timeBegin = Date.now();
 
-        for (let i = 0; i < 3; i++) {
-            await extractBuildReactApp('bench' + i, 10);
+        const fast = true;
+
+        if (fast) {
+            await extractBuildReactApp('bench', 1);
+        } else {
+            for (let i = 0; i < 3; i++) {
+                await extractBuildReactApp('bench' + i, 10);
+            }
         }
 
         logUpdate.clear()
@@ -162,8 +169,16 @@ async function bench() {
     finally {
         try {
             if (tmpDir) {
-                print('Deleting temporary files...');
+                print();
+                let i = 0;
+                const inter = setInterval(() => {
+                    const { frames } = spinner;
+                    logUpdate(frames[i = ++i % frames.length] + ' Deleting temporary files...');
+                }, spinner.interval);
                 fs.rmSync(tmpDir, { recursive: true });
+                clearInterval(inter);
+                logUpdate.clear()
+                logUpdate.done();
                 print('All done!');
             }
         }
@@ -172,16 +187,6 @@ async function bench() {
         }
     }
 }
-
-// function sleep(ms) {
-//     return new Promise((resolve) => {
-//         setTimeout(resolve, ms);
-//     });
-// }
-
-// async function psleep(ms) {
-//     await sleep(ms);
-// }
 
 async function run() {
     print();
