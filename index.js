@@ -70,7 +70,7 @@ async function runCommand(cmdStr) {
         const command = cmdList[0];
         const args = cmdList.slice(1);
 
-        const cmd = spawn(command, args);
+        const cmd = spawn(command, args, { shell: true });
 
         cmd.stdout.on("data", data => {
             // print(`stdout: ${data}`);
@@ -108,6 +108,7 @@ async function extractBuildReactApp(destDir, numberOfBuilds) {
         print(err);
     }
     process.chdir(path.join(destDir, 'foo-bar'));
+    // print(console.log(process.cwd()));
     try {
         await runCommand('npm install');
         for (let i = 0; i < numberOfBuilds; i++) {
@@ -161,7 +162,9 @@ async function bench() {
     finally {
         try {
             if (tmpDir) {
+                print('Deleting temporary files...');
                 fs.rmSync(tmpDir, { recursive: true });
+                print('All done!');
             }
         }
         catch (e) {
