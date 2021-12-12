@@ -10,7 +10,7 @@ const cliSpinners = require('cli-spinners');
 const rimraf = require('rimraf');
 const logUpdate = require('log-update');
 const decompress = require('decompress');
-const pjson = require('./package.json');
+const pjson = require('../package.json');
 const spinner = cliSpinners.dots;
 
 async function printSystemInfo() {
