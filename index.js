@@ -42,8 +42,12 @@ async function printBox(dt, title) {
     });
 
     const str = dt.reduce((prev, el) => prev + (prev && '\n') + info(pad(el.label, largestLabelSize), el.info), "");
-    console.log(boxen(str, { title, padding: 1 },));
-    await psleep(100);
+    print(boxen(str, { title, padding: 1 }));
+    // print(boxen(str, { title, padding: 1 }));
+}
+
+function print(msg) {
+    process.stdout.write((msg || '') + '\n');
 }
 
 function info(label, info) {
@@ -69,19 +73,19 @@ async function runCommand(cmdStr) {
         const cmd = spawn(command, args);
 
         cmd.stdout.on("data", data => {
-            // console.log(`stdout: ${data}`);
+            // print(`stdout: ${data}`);
             const newMsg = data && (data + '').trim();
             spinnerMsg = newMsg || spinnerMsg;
         });
 
         cmd.stderr.on("data", data => {
-            // console.log(`stderr: ${data}`);
+            // print(`stderr: ${data}`);
             const newMsg = data && (data + '').trim();
             spinnerMsg = newMsg || spinnerMsg;
         });
 
         cmd.on('error', (error) => {
-            // console.log(`error: ${error.message}`);
+            // print(`error: ${error.message}`);
             const newMsg = error && (error + '').trim();
             spinnerMsg = newMsg || spinnerMsg;
         });
@@ -101,7 +105,7 @@ async function extractBuildReactApp(destDir, numberOfBuilds) {
     try {
         await decompress(path.join(__dirname, './assets/foo-bar.tar.gz'), destDir);
     } catch (err) {
-        console.log(err);
+        print(err);
     }
     // await runCommand('npx -y create-react-app@3 ' + appName);
     process.chdir(path.join(destDir, 'foo-bar'));
@@ -112,21 +116,20 @@ async function extractBuildReactApp(destDir, numberOfBuilds) {
 }
 
 async function bench() {
-    await psleep(100);
     let tmpDir;
     const appPrefix = pjson.name;
     try {
         tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), appPrefix));
         process.chdir(tmpDir);
 
-        console.log();
-        console.log('Warming up...');
+        print();
+        print('Warming up...');
         await extractBuildReactApp('warm', 0);
         logUpdate.clear()
         logUpdate.done();
 
-        console.log();
-        console.log('Running benchmark...');
+        print();
+        print('Running benchmark...');
         const timeBegin = Date.now();
 
         for (let i = 0; i < 3; i++) {
@@ -146,7 +149,7 @@ async function bench() {
         const results = [];
         results.push({ label: 'Total time', info: Math.floor(secsTimeSpent) + 's' });
         results.push({ label: 'Details', info: minutes + 'm:' + Math.floor(seconds) + 's' });
-        console.log();
+        print();
         await printBox(results, "Results");
     }
     catch {
@@ -159,28 +162,31 @@ async function bench() {
             }
         }
         catch (e) {
-            console.error(`An error has occurred while removing the temp folder at ${tmpDir}. Please remove it manually.Error: ${e} `);
+            print(`An error has occurred while removing the temp folder at ${tmpDir}. Please remove it manually.Error: ${e} `);
         }
     }
 }
 
-function sleep(ms) {
-    return new Promise((resolve) => {
-        setTimeout(resolve, ms);
-    });
+// function sleep(ms) {
+//     return new Promise((resolve) => {
+//         setTimeout(resolve, ms);
+//     });
+// }
+
+// async function psleep(ms) {
+//     await sleep(ms);
+// }
+
+async function run() {
+    print();
+    print(info(pjson.name, pjson.version));
+    print();
+
+    await printSystemInfo();
+
+    await processorInfo();
+
+    await bench();
 }
 
-async function psleep(ms) {
-    await sleep(ms);
-}
-
-
-console.log();
-console.log(info(pjson.name, pjson.version));
-console.log();
-
-printSystemInfo();
-
-processorInfo();
-
-bench();
+run();
