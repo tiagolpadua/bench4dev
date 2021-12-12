@@ -7,9 +7,9 @@ const os = require('os');
 const path = require('path');
 const { spawn } = require("child_process");
 const cliSpinners = require('cli-spinners');
+const rimraf = require('rimraf');
 const logUpdate = require('log-update');
 const decompress = require('decompress');
-
 const pjson = require('./package.json');
 const spinner = cliSpinners.dots;
 
@@ -26,7 +26,6 @@ async function printSystemInfo() {
 
 async function processorInfo() {
     const pi = [];
-
     const cpu = await si.cpu();
     pi.push({ label: 'Name', info: cpu.manufacturer + ' ' + cpu.brand });
     pi.push({ label: 'Details', info: cpu.processors + ' Processors, ' + cpu.physicalCores + ' Physical Cores, ' + cpu.cores + ' Cores' });
@@ -44,7 +43,6 @@ async function printBox(dt, title) {
 
     const str = dt.reduce((prev, el) => prev + (prev && '\n') + info(pad(el.label, largestLabelSize), el.info), "");
     print(boxen(str, { title, padding: 1 }));
-    // print(boxen(str, { title, padding: 1 }));
 }
 
 function print(msg) {
@@ -137,7 +135,7 @@ async function bench() {
         print('Running benchmark...');
         const timeBegin = Date.now();
 
-        const fast = true;
+        const fast = false;
 
         if (fast) {
             await extractBuildReactApp('bench', 1);
@@ -163,8 +161,9 @@ async function bench() {
         print();
         await printBox(results, "Results");
     }
-    catch {
-        // handle error
+    catch (err) {
+        print('Error...');
+        print(JSON.stringify(err));
     }
     finally {
         try {
@@ -173,12 +172,16 @@ async function bench() {
                 let i = 0;
                 const inter = setInterval(() => {
                     const { frames } = spinner;
-                    logUpdate(frames[i = ++i % frames.length] + ' Deleting temporary files...');
+                    logUpdate(frames[i = ++i % frames.length] + ' Cleaning temporary files...');
                 }, spinner.interval);
-                fs.rmSync(tmpDir, { recursive: true });
-                clearInterval(inter);
-                logUpdate.clear()
+
+                await rmDir(tmpDir);
+
+                logUpdate.clear();
                 logUpdate.done();
+
+                clearInterval(inter);
+
                 print('All done!');
             }
         }
@@ -186,6 +189,18 @@ async function bench() {
             print(`An error has occurred while removing the temp folder at ${tmpDir}. Please remove it manually.Error: ${e} `);
         }
     }
+}
+
+async function rmDir(dir) {
+    return new Promise((resolve, reject) => {
+        rimraf(dir, err => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve();
+            }
+        });
+    });
 }
 
 async function run() {
