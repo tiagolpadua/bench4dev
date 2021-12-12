@@ -178,6 +178,8 @@ async function bench() {
     }
     finally {
         try {
+            process.chdir(tmpDir);
+
             if (tmpDir) {
                 print();
                 print('Temp dir: ' + tmpDir);
