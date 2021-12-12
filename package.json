@@ -15,6 +15,7 @@
     "boxen": "5.1.2",
     "chalk": "4.1.2",
     "cli-spinners": "^2.6.1",
+    "decompress": "^4.2.1",
     "log-update": "^4.0.0",
     "pad": "^3.2.0",
     "systeminformation": "5.9.17"

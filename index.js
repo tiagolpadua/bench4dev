@@ -8,6 +8,7 @@ const path = require('path');
 const { spawn } = require("child_process");
 const cliSpinners = require('cli-spinners');
 const logUpdate = require('log-update');
+const decompress = require('decompress');
 
 const pjson = require('./package.json');
 
@@ -68,17 +69,21 @@ async function runCommand(cmdStr) {
         const cmd = spawn(command, args);
 
         cmd.stdout.on("data", data => {
+            // console.log(`stdout: ${data}`);
             const newMsg = data && (data + '').trim();
             spinnerMsg = newMsg || spinnerMsg;
-            // console.log(`stdout: ${data}`);
         });
 
         cmd.stderr.on("data", data => {
-            console.log(`stderr: ${data}`);
+            // console.log(`stderr: ${data}`);
+            const newMsg = data && (data + '').trim();
+            spinnerMsg = newMsg || spinnerMsg;
         });
 
         cmd.on('error', (error) => {
-            console.log(`error: ${error.message}`);
+            // console.log(`error: ${error.message}`);
+            const newMsg = error && (error + '').trim();
+            spinnerMsg = newMsg || spinnerMsg;
         });
 
         cmd.on("close", code => {
@@ -92,9 +97,15 @@ async function runCommand(cmdStr) {
     });
 }
 
-async function createBuildReactApp(appName, numberOfBuilds) {
-    await runCommand('npx -y create-react-app@3 ' + appName);
-    process.chdir(appName);
+async function extractBuildReactApp(destDir, numberOfBuilds) {
+    try {
+        await decompress(path.join(__dirname, './assets/foo-bar.tar.gz'), destDir);
+    } catch (err) {
+        console.log(err);
+    }
+    // await runCommand('npx -y create-react-app@3 ' + appName);
+    process.chdir(path.join(destDir, 'foo-bar'));
+    await runCommand('npm install');
     for (let i = 0; i < numberOfBuilds; i++) {
         await runCommand('npm run build');
     }
@@ -110,7 +121,7 @@ async function bench() {
 
         console.log();
         console.log('Warming up...');
-        await createBuildReactApp('foo', 0);
+        await extractBuildReactApp('warm', 0);
         logUpdate.clear()
         logUpdate.done();
 
@@ -119,7 +130,7 @@ async function bench() {
         const timeBegin = Date.now();
 
         for (let i = 0; i < 3; i++) {
-            await createBuildReactApp('bar' + i, 10);
+            await extractBuildReactApp('bench' + i, 10);
         }
 
         logUpdate.clear()
