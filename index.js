@@ -133,6 +133,7 @@ async function bench() {
 
         print();
         print('Running benchmark...');
+        print('The benchmark will install and compile a JavaScript project several times.');
         const timeBegin = Date.now();
 
         const fast = false;
