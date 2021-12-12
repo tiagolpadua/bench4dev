@@ -131,20 +131,26 @@ async function bench() {
         tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), appPrefix));
         process.chdir(tmpDir);
 
-        print();
-        print('Warming up...');
-        await extractBuildReactApp('warm', 0);
-        logUpdate.clear()
-        logUpdate.done();
+        if (process.env.FAST_RUN) {
+            print('>>>> FAST RUN ENABLED <<<<');
+        }
+
+        if (process.env.FAST_RUN) {
+            print('FAST RUN: no warmup.');
+        } else {
+            print();
+            print('Warming up...');
+            await extractBuildReactApp('warm', 0);
+            logUpdate.clear()
+            logUpdate.done();
+        }
 
         print();
         print('Running benchmark...');
         print('The benchmark will install and compile a JavaScript project several times.');
         const timeBegin = Date.now();
 
-        const fast = false;
-
-        if (fast) {
+        if (process.env.FAST_RUN) {
             await extractBuildReactApp('bench', 1);
         } else {
             for (let i = 0; i < 3; i++) {
@@ -176,18 +182,30 @@ async function bench() {
         try {
             if (tmpDir) {
                 print();
+                print('Temp dir: ' + tmpDir);
                 let i = 0;
                 const inter = setInterval(() => {
                     const { frames } = spinner;
                     logUpdate(frames[i = ++i % frames.length] + ' Cleaning temporary files...');
                 }, spinner.interval);
 
-                await rmDir(tmpDir);
+                let success = false;
+                try {
+                    await rmDir(tmpDir);
+                    success = true;
+                } catch (err) {
+                    print('Error cleaning temporary directory.');
+                    print(JSON.stringify(err));
+                }
 
                 logUpdate.clear();
                 logUpdate.done();
 
                 clearInterval(inter);
+
+                if (success) {
+                    print('Temporary files cleaned!');
+                }
 
                 print('All done!');
             }
